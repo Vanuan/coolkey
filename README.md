@@ -1,8 +1,10 @@
-== What is this?
+What is this?
+=============
 
 This is a fork of CoolKey to support ActivKey SIM with up to 8 slots.
 
-== History
+History
+=======
 
 CoolKey is a RedHat project that provides support for various smartcards on Linux machine.
 
@@ -18,3 +20,7 @@ There is also no option to override ActivClient behaviour or to move certificate
 
 So there's no other choice as to add support for more slots.
 
+Installation
+============
+
+This repo contains a branch that should fix the problem above. Select it and see its readme file.
