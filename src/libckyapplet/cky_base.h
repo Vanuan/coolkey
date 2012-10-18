@@ -63,7 +63,7 @@ typedef struct _CKYAPDU {
 } CKYAPDU;
 
 /*
- * the following is just to make sure the sizes match 
+ * the following is just to make sure the sizes match
  */
 #ifdef DEBUG
 #ifdef CKYBUFFER_PRIVATE
@@ -84,9 +84,9 @@ typedef enum {
     CKYNOSCARD,		/* Scard library does not exist */
     CKYSCARDERR,		/* I/O Error in the SCard interface level. */
 			/* more specific error values can be queried from
-			 * the context or connection with the 
+			 * the context or connection with the
 			 * GetLastError() call */
-    CKYLIBFAIL,		/* error is shared library. no additional 
+    CKYLIBFAIL,		/* error is shared library. no additional
 			 * error is available. Only returned from internal
 			 * SHlib calls (not surfaced in public APIs */
     CKYAPDUFAIL,		/* processing worked, but applet rejected the APDU
@@ -114,13 +114,13 @@ typedef enum {
 #define CKY_OUTRAGEOUS_MALLOC_SIZE (1024*1024)
 
 /*
- * allow direct inclusion in C++ files 
+ * allow direct inclusion in C++ files
  */
 #ifdef __cplusplus
 #define CKY_BEGIN_PROTOS extern "C" {
 #define CKY_END_PROTOS }
 #else
-#define CKY_BEGIN_PROTOS 
+#define CKY_BEGIN_PROTOS
 #define CKY_END_PROTOS
 #endif
 
@@ -133,9 +133,9 @@ CKY_BEGIN_PROTOS
  */
 
 /*
- * Init functions clobbers the current contents and allocates the required 
- * space. 
- *   - Active buffers should call CKYBuffer_FreeData before calling an init 
+ * Init functions clobbers the current contents and allocates the required
+ * space.
+ *   - Active buffers should call CKYBuffer_FreeData before calling an init
  * function.
  *   - New buffers should call some CKYBuffer_Init function before any use.
  *   - All init functions copies the supplied data into newly allocated space.
@@ -150,10 +150,10 @@ CKYStatus CKYBuffer_InitFromLen(CKYBuffer *buf, CKYSize len);
 
 /* Create a buffer by decoding a hex string.  hexString is NULL terminated. */
 CKYStatus CKYBuffer_InitFromHex(CKYBuffer *buf, const char *hexString);
-	
+
 /* Create a buffer from data */
 CKYStatus CKYBuffer_InitFromData(CKYBuffer *buf, const CKYByte *data, CKYSize len);
-    
+
 /* Create a buffer from part of another buffer. Start indicates the
  * offset in the old buffer to start in, and len specifies how many bytes
  * to copy */
@@ -182,9 +182,9 @@ CKYStatus CKYBuffer_AppendLongLE(CKYBuffer *buf, unsigned long val);
 /* append data. the data starts at data and extends len bytes */
 CKYStatus CKYBuffer_AppendData(CKYBuffer *buf, const CKYByte *data, CKYSize len);
 
-/* append buffer fragment. the data starts at buffer[offset] 
+/* append buffer fragment. the data starts at buffer[offset]
  * and extends len bytes */
-CKYStatus CKYBuffer_AppendBuffer(CKYBuffer *buf, const CKYBuffer *src, 
+CKYStatus CKYBuffer_AppendBuffer(CKYBuffer *buf, const CKYBuffer *src,
 						CKYOffset offset, CKYSize len);
 
 /* append a full buffer  */
@@ -204,13 +204,13 @@ CKYStatus CKYBuffer_Resize(CKYBuffer *buf, CKYSize newLen);
 
 /* replace bytes starting at 'offset'. If the buffer needs to be extended,
  * it will be automatically */
-CKYStatus CKYBuffer_Replace(CKYBuffer *buf, CKYOffset offset, const CKYByte *data, 
+CKYStatus CKYBuffer_Replace(CKYBuffer *buf, CKYOffset offset, const CKYByte *data,
 								CKYSize len);
 
 /* set  byte at ofset. The buffer is extended to offset if necessary */
 CKYStatus CKYBuffer_SetChar(CKYBuffer *buf, CKYOffset offset, CKYByte c);
 /* set several copies of 'c' at from offset to offset+ len */
-CKYStatus CKYBuffer_SetChars(CKYBuffer *buf, CKYOffset offset, 
+CKYStatus CKYBuffer_SetChars(CKYBuffer *buf, CKYOffset offset,
 						CKYByte c, CKYSize len);
 /* These functions work in applet order */
 CKYStatus CKYBuffer_SetShort(CKYBuffer *buf, CKYOffset offset, unsigned short val);
@@ -232,7 +232,7 @@ unsigned long CKYBuffer_GetLongLE(const CKYBuffer *buf, CKYOffset offset);
 /* clear out all the data in a buffer */
 void CKYBuffer_Zero(CKYBuffer *buf);
 
-/* return the size (length) of a buffer. This is only the portion of the 
+/* return the size (length) of a buffer. This is only the portion of the
  * buffer that has valid data set. */
 CKYSize CKYBuffer_Size(const CKYBuffer *buf);
 
@@ -283,5 +283,5 @@ CKYStatus CKYAPDU_SetReceiveLen(CKYAPDU *apdu, CKYByte recvlen);
 void CKY_SetName(char *name);
 
 CKY_END_PROTOS
-    
+
 #endif /* CKY_BASE_H */

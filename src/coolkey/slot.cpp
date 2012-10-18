@@ -47,10 +47,10 @@ const CKYByte ATR[] =
 { 0x3b, 0x75, 0x94, 0x00, 0x00, 0x62, 0x02, 0x02, 0x02, 0x01 };
 const CKYByte ATR1[] =
 { 0x3b, 0x75, 0x94, 0x00, 0x00, 0x62, 0x02, 0x02, 0x03, 0x01 };
-const CKYByte ATR3[] = 
+const CKYByte ATR3[] =
 { 0x3b, 0x76, 0x94, 0x00, 0x00, 0xff, 0x62, 0x76, 0x01, 0x00, 0x00 };
 /* RSA SecurID */
-const CKYByte ATR2[] = 
+const CKYByte ATR2[] =
 {  0x3B, 0x6F, 0x00, 0xFF, 0x52, 0x53, 0x41, 0x53, 0x65, 0x63, 0x75, 0x72,
    0x49, 0x44, 0x28, 0x52, 0x29, 0x31, 0x30 };
 
@@ -132,7 +132,7 @@ SlotList::updateSlotList()
 
     try {
 	newSlots = new Slot*[numReaders];
-        if (newSlots == NULL ) 
+        if (newSlots == NULL )
 	    throw PKCS11Exception(CKR_HOST_MEMORY);
 	memset(newSlots, 0, numReaders*sizeof(Slot*));
 
@@ -144,8 +144,8 @@ SlotList::updateSlotList()
 	}
 
 	oldSlots = slots;
-	slots = newSlots;  // update the pointer first 
-	numSlots = numReaders; // now update the count 
+	slots = newSlots;  // update the pointer first
+	numSlots = numReaders; // now update the count
 	if (oldSlots) {    // ok we can free the old value now
 	    delete [] oldSlots;
 	}
@@ -164,7 +164,7 @@ SlotList::updateSlotList()
         throw;
     }
     readerListLock.releaseLock();
-	
+
 }
 
 bool
@@ -181,7 +181,7 @@ SlotList::readerExists(const char *readerName, unsigned int *hint)
      * We use 'hint' as a way of deciding where to
      * start. This way we can handle the normal case where the name list
      * and the readerState matches one for one with a single string compare.
-     */ 
+     */
     for (i=start; i < numReaders; i++) {
 	if (strcmp(CKYReader_GetReaderName(&readerStates[i]),readerName) == 0) {
 	    if (hint) {
@@ -220,9 +220,9 @@ SlotList::readerNameExistsInList(const char *readerName,CKYReaderNameList *reade
         if(!strcmp(curReaderName,readerName)) {
             return TRUE;
         }
-        
+
     }
-    
+
     return FALSE;
 }
 
@@ -238,10 +238,10 @@ SlotList::updateReaderList()
     CKYStatus status = CKYCardContext_ListReaders(context, &readerNames);
     if ( status != CKYSUCCESS ) {
 	/* if the service is stopped, treat it as if we have no readers */
- 	if ((CKYCardContext_GetLastError(context) != SCARD_E_NO_SERVICE) && 
+ 	if ((CKYCardContext_GetLastError(context) != SCARD_E_NO_SERVICE) &&
 	    (CKYCardContext_GetLastError(context) != SCARD_E_SERVICE_STOPPED)) {
 	    throw PKCS11Exception(CKR_GENERAL_ERROR,
-                 "Failed to list readers: 0x%x\n", 
+                 "Failed to list readers: 0x%x\n",
  				CKYCardContext_GetLastError(context));
 	}
 
@@ -269,7 +269,7 @@ SlotList::updateReaderList()
 	    }
 	}
 	CKYReaderNameList_Destroy(readerNames);
-	        
+
 	if (readerStates == NULL) {
 	    throw PKCS11Exception(CKR_HOST_MEMORY,
 				"Failed to allocate ReaderStates\n");
@@ -284,7 +284,7 @@ SlotList::updateReaderList()
      * don't recognize.
      */
 
-    /* first though, let's check to see if any previously removed readers have 
+    /* first though, let's check to see if any previously removed readers have
      * come back from the dead. If the ignored bit has been set, we do not need
      * it any more.
     */
@@ -292,18 +292,18 @@ SlotList::updateReaderList()
     const char *curReaderName = NULL;
     unsigned long knownState = 0;
     for(int ri = 0 ; ri < numReaders; ri ++)  {
-       
+
         knownState = CKYReader_GetKnownState(&readerStates[ri]);
         if( !(knownState & SCARD_STATE_IGNORE))  {
             continue;
         }
- 
-        curReaderName =  CKYReader_GetReaderName(&readerStates[ri]); 
+
+        curReaderName =  CKYReader_GetReaderName(&readerStates[ri]);
         if(readerNameExistsInList(curReaderName,&readerNames)) {
-            CKYReader_SetKnownState(&readerStates[ri], knownState & ~SCARD_STATE_IGNORE); 
-                 
+            CKYReader_SetKnownState(&readerStates[ri], knownState & ~SCARD_STATE_IGNORE);
+
         }
-    } 
+    }
 
     const char *newReadersData[MAX_READER_DELTA];
     const char **newReaders = &newReadersData[0];
@@ -314,26 +314,26 @@ SlotList::updateReaderList()
 	CKYReaderNameIterator iter;
 
 	for (iter = CKYReaderNameList_GetIterator(readerNames);
-				!CKYReaderNameIterator_End(iter); 
+				!CKYReaderNameIterator_End(iter);
 				iter = CKYReaderNameIterator_Next(iter)) {
 	    const char *thisReaderName = CKYReaderNameIterator_GetValue(iter);
 	    if (!readerExists(thisReaderName, &hint)) {
 		if (newReaderCount == MAX_READER_DELTA) {
-		    /* oops, we overflowed our buffer, alloc a new one right 
-		     * quick. This code is very unlikely, so it's not fast, 
-		     * but it's  meant to keep working, even in this weird 
+		    /* oops, we overflowed our buffer, alloc a new one right
+		     * quick. This code is very unlikely, so it's not fast,
+		     * but it's  meant to keep working, even in this weird
 		     * condition. NOTE: it assumes that we can't have any
 		     * more  new readers than candidate readers we are
 		     * checking */
 		    int maxReaders = CKYReaderNameList_GetCount(readerNames);
 		    assert(maxReaders > MAX_READER_DELTA);
-		    newReaders = new const char *[maxReaders]; 
+		    newReaders = new const char *[maxReaders];
 		    if (!newReaders) {
 			throw PKCS11Exception(CKR_HOST_MEMORY,
-			   "Could allocate space for %d new readers\n", 
+			   "Could allocate space for %d new readers\n",
 								maxReaders);
 		    }
-		    memcpy(newReaders, newReadersData, 
+		    memcpy(newReaders, newReadersData,
 				MAX_READER_DELTA*sizeof(newReadersData[0]));
 		}
 		newReaders[newReaderCount++] = thisReaderName;
@@ -371,12 +371,12 @@ SlotList::updateReaderList()
         throw;
     }
 }
-    
+
 
 Slot::Slot(const char *readerName_, Log *log_, CKYCardContext* context_)
     : log(log_), readerName(NULL), personName(NULL), manufacturer(NULL),
-	slotInfoFound(false), context(context_), conn(NULL), state(UNKNOWN), 
-	isVersion1Key(false), needLogin(false), fullTokenName(false), 
+	slotInfoFound(false), context(context_), conn(NULL), state(UNKNOWN),
+	isVersion1Key(false), needLogin(false), fullTokenName(false),
 	mCoolkey(false), mOldCAC(false),
 #ifdef USE_SHMEM
 	shmem(readerName_),
@@ -442,7 +442,7 @@ Slot::readSlotInfo(void)
     CKYBuffer attrBuf;
 
     CKYBuffer_InitEmpty(&attrBuf);
-    status = CKYCardConnection_GetAttribute(conn, 
+    status = CKYCardConnection_GetAttribute(conn,
 			SCARD_ATTR_VENDOR_IFD_VERSION, &attrBuf);
     if (status == CKYSUCCESS) {
 	const CKYByte *type = CKYBuffer_Data(&attrBuf);
@@ -454,7 +454,7 @@ Slot::readSlotInfo(void)
 	    hwVersion.major = (CK_BYTE) (version >> 24) & 0xff;
 	    hwVersion.minor = (CK_BYTE) (version >> 16) & 0xff;
 	}
-        status = CKYCardConnection_GetAttribute(conn, 
+        status = CKYCardConnection_GetAttribute(conn,
 					SCARD_ATTR_VENDOR_NAME, &attrBuf);
 	if (status == CKYSUCCESS) {
 	    free(manufacturer);
@@ -462,7 +462,7 @@ Slot::readSlotInfo(void)
 	    CKYBuffer_AppendChar(&attrBuf,0);
 	    manufacturer = strdup((const char *)CKYBuffer_Data(&attrBuf));
 	    slotInfoFound = true;
-	} 
+	}
     } else {
 	PRINTF(("readSlotInfo failed\n"));
     }
@@ -508,7 +508,7 @@ class ArrayFreer {
 
 CK_RV
 SlotList::getSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList,
-         CK_ULONG_PTR pulCount) 
+         CK_ULONG_PTR pulCount)
 {
     CK_RV rv = CKR_OK;
     unsigned int i;
@@ -598,8 +598,8 @@ Slot::connectToToken()
         while( i++ < 5 && status != CKYSUCCESS )
         {
             status = CKYCardConnection_Connect(conn, readerName);
-            if( status != CKYSUCCESS && 
-                CKYCardConnection_GetLastError(conn) == SCARD_E_PROTO_MISMATCH ) 
+            if( status != CKYSUCCESS &&
+                CKYCardConnection_GetLastError(conn) == SCARD_E_PROTO_MISMATCH )
             {
                 log->log("Unable to connect to token status %d ConnGetGetLastError %x .\n",status,CKYCardConnection_GetLastError(conn));
 
@@ -637,7 +637,7 @@ Slot::connectToToken()
     }
 
     if (Params::hasParam("noAppletOK"))
-    {      
+    {
         state |=  APPLET_SELECTABLE;
 	mCoolkey = 1;
     }
@@ -658,7 +658,7 @@ Slot::connectToToken()
 
     /* CAC card are cranky after they are first inserted.
      *  don't continue until we can convince the tranaction to work */
-    for (int count = 0; count < 10 && status == CKYSCARDERR 
+    for (int count = 0; count < 10 && status == CKYSCARDERR
        && CKYCardConnection_GetLastError(conn) == SCARD_W_RESET_CARD; count++) {
 	log->log("CAC Card Reset detected retry %d: time %d ms\n", count,
 		OSTimeNow() - time);
@@ -731,7 +731,7 @@ loser:
     tokenFWVersion.major = lifeCycleV2.protocolMajorVersion;
     tokenFWVersion.minor = lifeCycleV2.protocolMinorVersion;
 }
-    
+
 bool
 Slot::cardStateMayHaveChanged()
 {
@@ -742,7 +742,7 @@ log->log("calling IsConnected\n");
         return true;
     }
 log->log("IsConnected returned false\n");
-    
+
     // If the card has been removed or reset, this call will fail.
     unsigned long cardState;
     CKYBuffer aid;
@@ -836,8 +836,8 @@ Slot::getCACAid()
     tlen = CKYBuffer_Size(&tBuf);
     vlen = CKYBuffer_Size(&vBuf);
 
-    for(toffset = 2, voffset=2; 
-	certSlot < MAX_CERT_SLOTS && toffset < tlen && voffset < vlen ; 
+    for(toffset = 2, voffset=2;
+	certSlot < MAX_CERT_SLOTS && toffset < tlen && voffset < vlen ;
 		voffset += length) {
 
 	CKYByte tag = CKYBuffer_GetChar(&tBuf, toffset);
@@ -862,7 +862,7 @@ Slot::getCACAid()
 	if (status != CKYSUCCESS) {
 	    goto done;
 	}
-	status = CKYBuffer_AppendBuffer(&cardAID[certSlot], &vBuf, 
+	status = CKYBuffer_AppendBuffer(&cardAID[certSlot], &vBuf,
 								voffset+8, 2);
 	if (status != CKYSUCCESS) {
 	    goto done;
@@ -942,7 +942,7 @@ SlotList::openSession(Session::Type type, CK_SLOT_ID slotID,
 {
     validateSlotID(slotID);
 
-    SessionHandleSuffix suffix = 
+    SessionHandleSuffix suffix =
         slots[slotIDToIndex(slotID)]->openSession(type);
 
     *phSession = makeSessionHandle(slotID, suffix);
@@ -958,7 +958,7 @@ SlotList::closeSession(CK_SESSION_HANDLE hSession)
 
     slots[slotIDToIndex(slotID)]->closeSession(suffix);
 }
-    
+
 
 SessionHandleSuffix
 Slot::openSession(Session::Type type)
@@ -1026,8 +1026,8 @@ Slot::getSlotInfo(CK_SLOT_INFO_PTR pSlotInfo)
     return CKR_OK;
 }
 
-inline unsigned char 
-hex(unsigned long digit) 
+inline unsigned char
+hex(unsigned long digit)
 {
     return (digit > 9 )? (char)(digit+'a'-10) : (char)(digit+'0');
 }
@@ -1036,23 +1036,23 @@ void
 Slot::makeCUIDString(char *serialNumber, int maxSize,
 						 const unsigned char *cuids)
 {
-    signed int i; // must be signed or for loop won't exit! 
+    signed int i; // must be signed or for loop won't exit!
     char *cp;
 
     memset(serialNumber, ' ', maxSize);
     // CUID is an 8 digit hex number with leading zeros.
     // we count down from 8 stripping hex digits. If there is not
-    // enough space, we truncate the top digits 
-    unsigned long cuid = 
+    // enough space, we truncate the top digits
+    unsigned long cuid =
 	((unsigned long) cuids[6]) << 24 |
 	((unsigned long) cuids[7]) << 16 |
 	((unsigned long) cuids[8]) <<  8 |
 		((unsigned long) cuids[9]) ;
 
-    for (i = MIN(maxSize,8)-1, cp= serialNumber; i >= 0; 
+    for (i = MIN(maxSize,8)-1, cp= serialNumber; i >= 0;
 						cp++, i--) {
 	unsigned long digit = cuid >> (i*4);
-	// if we truncated the beginning. show that with a '*' 
+	// if we truncated the beginning. show that with a '*'
 	*cp = (digit > 0xf) ? '*' : hex(digit);
 	cuid -=  digit << (i*4);
     }
@@ -1065,7 +1065,7 @@ Slot::makeSerialString(char *serialNumber, int maxSize,
 {
     memset(serialNumber, ' ', maxSize);
 
-    // otherwise we use the eepromSerialNumber as a hex value 
+    // otherwise we use the eepromSerialNumber as a hex value
     if (cuid) {
          makeCUIDString(serialNumber, maxSize, cuid);
     }
@@ -1080,11 +1080,11 @@ Slot::makeLabelString(char *label, int maxSize, const unsigned char *cuid)
     if (fullTokenName) {
 	personLen = strlen(personName);
 	memcpy(label, personName, MIN(personLen, maxSize));
-        // UTF8 Truncate fixup! don't drop halfway through a UTF8 character 
+        // UTF8 Truncate fixup! don't drop halfway through a UTF8 character
 	return;
     }
-    
-// 
+
+//
 // Legacy tokens only 'speak' english.
 //
 #define COOLKEY "CoolKey"
@@ -1098,7 +1098,7 @@ Slot::makeLabelString(char *label, int maxSize, const unsigned char *cuid)
     const int prefixSize = sizeof (COOLKEY POSSESSION )-1;
     memcpy(label, COOLKEY POSSESSION, prefixSize);
     personLen = strlen(personName);
-    memcpy(&label[prefixSize], personName, 
+    memcpy(&label[prefixSize], personName,
 				MIN(personLen, maxSize-prefixSize));
 
 }
@@ -1182,11 +1182,11 @@ Slot::getTokenInfo(CK_TOKEN_INFO_PTR pTokenInfo)
 
     /// format the token string
     makeLabelString((char *)pTokenInfo->label, sizeof(pTokenInfo->label),cuid);
-    makeSerialString((char *)pTokenInfo->serialNumber, 
+    makeSerialString((char *)pTokenInfo->serialNumber,
 				sizeof(pTokenInfo->serialNumber), cuid);
-    makeModelString((char *)pTokenInfo->model, 
+    makeModelString((char *)pTokenInfo->model,
 				sizeof(pTokenInfo->model), cuid);
-    makeManufacturerString((char *)pTokenInfo->manufacturerID, 
+    makeManufacturerString((char *)pTokenInfo->manufacturerID,
 				sizeof(pTokenInfo->manufacturerID), cuid);
 
     pTokenInfo->flags = CKF_WRITE_PROTECTED;
@@ -1248,10 +1248,10 @@ SlotList::waitForSlotEvent(CK_FLAGS flag, CK_SLOT_ID_PTR slotp, CK_VOID_PTR res)
 	if (myNumReaders != numReaders) {
 	    if (myReaderStates) {
 		delete [] myReaderStates;
-	    } 
+	    }
 	    myReaderStates = new SCARD_READERSTATE [numReaders];
 	}
-	memcpy(myReaderStates, readerStates, 
+	memcpy(myReaderStates, readerStates,
 				sizeof(SCARD_READERSTATE)*numReaders);
 	myNumReaders = numReaders;
 	readerListLock.releaseLock();
@@ -1399,7 +1399,7 @@ Slot::selectCACApplet(CKYByte instance)
         throw PKCS11Exception(CKR_DEVICE_REMOVED);
 	return;
     }
-    
+
     status = CKYApplet_SelectFile(conn, aid, NULL);
     if ( status == CKYSCARDERR ) handleConnectionError();
     if ( status != CKYSUCCESS) {
@@ -1419,14 +1419,14 @@ Slot::selectCACApplet(CKYByte instance)
 }
 // assume we are already in a transaction
 void
-Slot::readMuscleObject(CKYBuffer *data, unsigned long objectID, 
+Slot::readMuscleObject(CKYBuffer *data, unsigned long objectID,
 							unsigned int objSize)
 {
     CKYStatus status;
 
     status = CKYApplet_ReadObjectFull(conn, objectID, 0, objSize,
 		getNonce(), data, NULL);
-    if (status == CKYSCARDERR) { 
+    if (status == CKYSCARDERR) {
         handleConnectionError();
     }
     if (status != CKYSUCCESS) {
@@ -1441,11 +1441,11 @@ class DERCertObjIDMatch {
     unsigned short certnum;
     const Slot      &slot;
   public:
-    DERCertObjIDMatch(unsigned short cn, const Slot &s) : 
+    DERCertObjIDMatch(unsigned short cn, const Slot &s) :
 		certnum(cn), slot(s) { }
 
     bool operator()(const ListObjectInfo& info) {
-        return  (slot.getObjectClass(info.obj.objectID) == 'C') 
+        return  (slot.getObjectClass(info.obj.objectID) == 'C')
 		&& ( slot.getObjectIndex(info.obj.objectID) == certnum );
     }
 };
@@ -1483,7 +1483,7 @@ class ObjectCertCKAIDMatch {
         const CKYBuffer *objClass;
 	CK_OBJECT_CLASS certClass = CKO_CERTIFICATE;
 	objClass = obj.getAttribute(CKA_CLASS);
-        if (objClass == NULL || !CKYBuffer_DataIsEqual(objClass, 
+        if (objClass == NULL || !CKYBuffer_DataIsEqual(objClass,
 				(CKYByte *)&certClass, sizeof(certClass))) {
 	    return false;
         }
@@ -1546,11 +1546,11 @@ Slot::addObject(list<PKCS11Object>& objectList, const ListObjectInfo& info,
 }
 
 void
-Slot::addCertObject(list<PKCS11Object>& objectList, 
+Slot::addCertObject(list<PKCS11Object>& objectList,
     const ListObjectInfo& certAttrs,
     const CKYBuffer *derCert, CK_OBJECT_HANDLE handle)
 {
-    Cert certObj(certAttrs.obj.objectID, 
+    Cert certObj(certAttrs.obj.objectID,
 				&certAttrs.data, handle, derCert);
     if (personName == NULL) {
 	personName = strdup(certObj.getLabel());
@@ -1572,21 +1572,21 @@ Slot::unloadObjects()
 
 // The shared memory segment is used to cache the raw token objects from
 // the card so mupltiple instances do not need to read all the data in
-// by themselves. It also allows us to recover data from a token on 
+// by themselves. It also allows us to recover data from a token on
 // reinsertion if that token is inserted into the same 'slot' as it was
 // originally.
 //
 // There is one memory segment for each slot.
 //
 // The process that creates the shared memory segment will initialize the
-// valid byte to '0'. Otherwise the Memory Segment must be accessed while 
-// in a transaction for the connection to a reader that the memory segment 
+// valid byte to '0'. Otherwise the Memory Segment must be accessed while
+// in a transaction for the connection to a reader that the memory segment
 // represents is held.
 //
-// If the memory segment is not valid, does not match the CUID of the 
-// current token, or does not match the current data version, the current 
+// If the memory segment is not valid, does not match the CUID of the
+// current token, or does not match the current data version, the current
 // process will read the object data out of the card  and into shared memory.
-// Since access to the shared memory is protected by the interprocess 
+// Since access to the shared memory is protected by the interprocess
 // transaction lock on the reader, data consistancy is
 // maintained.
 //
@@ -1614,11 +1614,11 @@ Slot::unloadObjects()
 //  n bytes   Data.
 //
 // All data in the shared memory header is stored in machine order, packing,
-//  and size. Data in the DataHeader and Data sections are stored in applet 
+//  and size. Data in the DataHeader and Data sections are stored in applet
 //  byte order.
 //
 // Shared memory segments are fixed size (equal to the object memory size of
-// the token). 
+// the token).
 //
 
 struct SlotSegmentHeader {
@@ -1644,7 +1644,7 @@ struct SlotSegmentHeader {
 //
 #define SEGMENT_PREFIX "coolkeypk11s"
 #define CAC_FAKE_CUID "CAC Certs"
-SlotMemSegment::SlotMemSegment(const char *readerName): 
+SlotMemSegment::SlotMemSegment(const char *readerName):
 	segmentAddr(NULL),  segmentSize(0), segment(NULL)
 {
    bool needInit;
@@ -1655,7 +1655,7 @@ SlotMemSegment::SlotMemSegment(const char *readerName):
 	// just run without shared memory
 	return;
     }
-    sprintf(segName,SEGMENT_PREFIX"%s",readerName); 
+    sprintf(segName,SEGMENT_PREFIX"%s",readerName);
     segment = SHMem::initSegment(segName, MAX_OBJECT_STORE_SIZE, needInit);
     delete [] segName;
     if (!segment) {
@@ -1693,8 +1693,8 @@ SlotMemSegment::CUIDIsEqual(const CKYBuffer *cuid) const
     }
     SlotSegmentHeader *segmentHeader = (SlotSegmentHeader *)segmentAddr;
 
-    return 
-     CKYBuffer_DataIsEqual(cuid, (CKYByte *)segmentHeader->cuid, 
+    return
+     CKYBuffer_DataIsEqual(cuid, (CKYByte *)segmentHeader->cuid,
 	sizeof(segmentHeader->cuid)) ? true : false;
 }
 
@@ -1999,7 +1999,7 @@ Slot::fetchSeparateObjects()
     //
     // get the content of each object
     //
-    for (i=0, iter = objInfoList.begin(); iter != objInfoList.end(); 
+    for (i=0, iter = objInfoList.begin(); iter != objInfoList.end();
 								++iter, i++) {
 	// check the ACL to make sure this will succeed.
 	unsigned short readPerm = iter->obj.readACL;
@@ -2007,7 +2007,7 @@ Slot::fetchSeparateObjects()
 	log->log("Object has read perm 0x%04x\n", readPerm);
 	if ( (!isVersion1Key && ((readPerm & 0x2) == readPerm)) ||
  				(isVersion1Key && ((readPerm & 0x1))) ) {
-	    readMuscleObject(&iter->data, iter->obj.objectID, 
+	    readMuscleObject(&iter->data, iter->obj.objectID,
 						iter->obj.objectSize);
 	    log->log("Object:\n");
 	    log->dump(&iter->data);
@@ -2041,7 +2041,7 @@ Slot::fetchCombinedObjects(const CKYBuffer *header)
     unsigned short dataVersion = CKYBuffer_GetShort(
 					header, OBJ_OBJECT_VERSION_OFFSET);
 
-    if (shmem.isValid() &&  shmem.CUIDIsEqual(&mCUID) && 
+    if (shmem.isValid() &&  shmem.CUIDIsEqual(&mCUID) &&
 			shmem.getDataVersion() == dataVersion) {
 	shmem.readData(&objBuffer);
     } else {
@@ -2050,7 +2050,7 @@ Slot::fetchCombinedObjects(const CKYBuffer *header)
 	shmem.setVersion(SHMEM_VERSION);
 	shmem.setDataVersion(dataVersion);
 	CKYBuffer dataHeader;
-	CKYBuffer_InitFromBuffer(&dataHeader, header, 0, 
+	CKYBuffer_InitFromBuffer(&dataHeader, header, 0,
 					(CKYSize) compressedOffset);
 
 	shmem.writeHeader(&dataHeader);
@@ -2067,12 +2067,12 @@ Slot::fetchCombinedObjects(const CKYBuffer *header)
 	log->log("time fetch combined: "
 		"headerbytes = %d compressedOffset = %d compressedSize = %d\n",
 				headerBytes, compressedOffset, compressedSize);
-	status = CKYApplet_ReadObjectFull(conn, COMBINED_ID, 
-		headerSize, compressedSize - headerBytes, getNonce(), 
+	status = CKYApplet_ReadObjectFull(conn, COMBINED_ID,
+		headerSize, compressedSize - headerBytes, getNonce(),
 						&objBuffer, NULL);
 	log->log("time fetch combined: read status = %d objectBuffSize = %d\n",
 			 status, CKYBuffer_Size(&objBuffer));
-	if (status == CKYSCARDERR) { 
+	if (status == CKYSCARDERR) {
 	    CKYBuffer_FreeData(&objBuffer);
 	    handleConnectionError();
 	}
@@ -2103,12 +2103,12 @@ Slot::fetchCombinedObjects(const CKYBuffer *header)
 	    CKYBuffer_FreeData(&compBuffer);
 	    if (zret != Z_OK) {
 		CKYBuffer_FreeData(&objBuffer);
-		throw PKCS11Exception(CKR_DEVICE_ERROR, 
+		throw PKCS11Exception(CKR_DEVICE_ERROR,
 				"Corrupted compressed object Data");
 	    }
 	    CKYBuffer_Resize(&objBuffer,objSize);
  	}
-	
+
 	// uncompress...
 #ifdef USE_SHMEM
 	shmem.writeData(&objBuffer);
@@ -2120,7 +2120,7 @@ Slot::fetchCombinedObjects(const CKYBuffer *header)
      //
      // now pull apart the objects
      //
-    unsigned short offset = 
+    unsigned short offset =
 		CKYBuffer_GetShort(&objBuffer, OBJ_OBJECT_OFFSET_OFFSET);
     unsigned short objectCount = CKYBuffer_GetShort(
 					&objBuffer, OBJ_OBJECT_COUNT_OFFSET);
@@ -2189,7 +2189,7 @@ Slot::fetchCombinedObjects(const CKYBuffer *header)
 }
 
 CKYStatus
-Slot::readCACCertificateFirst(CKYBuffer *cert, CKYSize *nextSize, 
+Slot::readCACCertificateFirst(CKYBuffer *cert, CKYSize *nextSize,
 			      bool throwException)
 {
     CKYStatus status;
@@ -2233,7 +2233,7 @@ Slot::readCACCertificateFirst(CKYBuffer *cert, CKYSize *nextSize,
     vlen = CKYBuffer_Size(&vBuf);
 
     /* look for the Cert out of the TLV */
-    for(toffset = 2, voffset=2; toffset < tlen && voffset < vlen ; 
+    for(toffset = 2, voffset=2; toffset < tlen && voffset < vlen ;
 		voffset += length) {
 
 	CKYByte tag = CKYBuffer_GetChar(&tBuf, toffset);
@@ -2296,7 +2296,7 @@ Slot::loadCACCert(CKYByte instance)
 	if (instance == 0) throw e;
 	// If the CAC doesn't have instance '2', and we were updating
 	// the shared memory, set it to valid now.
-	if ((instance == 2) && !shmem.isValid()) {
+	if ((instance >= 2) && !shmem.isValid()) {
 	    shmem.setValid();
 	}
 	return;
@@ -2336,7 +2336,7 @@ Slot::loadCACCert(CKYByte instance)
 		needRead = 0;
 	    }
 	}
-	if (!needRead && (shmCertSize == 0)) {	
+	if (!needRead && (shmCertSize == 0)) {
 	    /* no cert of this type, just return */
 	    return;
 	}
@@ -2367,13 +2367,13 @@ Slot::loadCACCert(CKYByte instance)
 	if (nextSize) {
 	    status = readCACCertificateAppend(&rawCert, nextSize);
 	}
-	log->log("CAC Cert %d: Fetch rest :  %d ms\n", 
+	log->log("CAC Cert %d: Fetch rest :  %d ms\n",
 						instance, OSTimeNow() - time);
 	if (status != CKYSUCCESS) {
 	    handleConnectionError();
 	}
 	shmem.writeCACCert(&rawCert, instance);
-	if (instance == 2) {
+	if (instance >= 2) {
 	    shmem.setValid();
 	}
     }
@@ -2395,14 +2395,14 @@ Slot::loadCACCert(CKYByte instance)
 	    }
 	    certSize = guessFinalSize;
 	    zret = uncompress((Bytef *)CKYBuffer_Data(&cert),&certSize,
-			CKYBuffer_Data(&rawCert)+offset, 
+			CKYBuffer_Data(&rawCert)+offset,
 			CKYBuffer_Size(&rawCert)-offset);
 	} while (zret == Z_BUF_ERROR);
 
 	if (zret != Z_OK) {
 	    CKYBuffer_FreeData(&rawCert);
 	    CKYBuffer_FreeData(&cert);
-	    throw PKCS11Exception(CKR_DEVICE_ERROR, 
+	    throw PKCS11Exception(CKR_DEVICE_ERROR,
 				"Corrupted compressed CAC Cert");
 	}
 	CKYBuffer_Resize(&cert,certSize);
@@ -2459,19 +2459,19 @@ Slot::loadObjects()
     selectApplet();
     log->log("time load object: Select Applet (again) %d ms\n",
 						OSTimeNow() - time);
-    
 
-    status = CKYApplet_ReadObjectFull(conn, COMBINED_ID, 0, 
+
+    status = CKYApplet_ReadObjectFull(conn, COMBINED_ID, 0,
 			CKY_MAX_READ_CHUNK_SIZE, getNonce(), &header, NULL);
-    log->log("time load object: ReadCombined Header %d ms\n", 
+    log->log("time load object: ReadCombined Header %d ms\n",
 						OSTimeNow() - time);
-    if (status == CKYSCARDERR) { 
+    if (status == CKYSCARDERR) {
         CKYBuffer_FreeData(&header);
         handleConnectionError();
     }
     bool isCombined = (status == CKYSUCCESS) ? true : false;
     try {
-	objInfoList = isCombined ? fetchCombinedObjects(&header) 
+	objInfoList = isCombined ? fetchCombinedObjects(&header)
 						: fetchSeparateObjects();
     } catch(PKCS11Exception& e) {
 	CKYBuffer_FreeData(&header);
@@ -2510,7 +2510,7 @@ Slot::loadObjects()
 		}
             }
 	    CK_OBJECT_HANDLE handle = generateUnusedObjectHandle();
-            addCertObject(tokenObjects, *iter, 
+            addCertObject(tokenObjects, *iter,
 			isCombined ? NULL : &derCert->data, handle);
         } else if ( type == 'C' ) {
 	    // This is a DER Cert object (as opposed to a cert attribute
@@ -2725,7 +2725,7 @@ Slot::attemptCACLogin()
     CKYStatus status;
     CKYISOStatus result;
 
-    status = CACApplet_VerifyPIN(conn, 
+    status = CACApplet_VerifyPIN(conn,
 		(const char *)CKYBuffer_Data(pinCache.get()), &result);
     if( status == CKYSCARDERR ) {
 	handleConnectionError();
@@ -2739,7 +2739,7 @@ Slot::attemptCACLogin()
 	if ((result & 0xff00) == 0x6300) {
             throw PKCS11Exception(CKR_PIN_INCORRECT);
 	}
-        throw PKCS11Exception(CKR_DEVICE_ERROR, "Applet returned 0x%04x", 
+        throw PKCS11Exception(CKR_DEVICE_ERROR, "Applet returned 0x%04x",
 								result);
     }
 
@@ -2768,7 +2768,7 @@ Slot::oldAttemptLogin()
       case CKYISO_IDENTITY_BLOCKED:
         throw PKCS11Exception(CKR_PIN_LOCKED);
       default:
-        throw PKCS11Exception(CKR_DEVICE_ERROR, "Applet returned 0x%04x", 
+        throw PKCS11Exception(CKR_DEVICE_ERROR, "Applet returned 0x%04x",
 								result);
     }
 
@@ -3221,7 +3221,7 @@ stripRSAPadding(CKYBuffer *stripped, const CKYBuffer *padded)
             "Unknown PKCS#1 block type %x", blockType);
     }
 
-    CKYStatus status = CKYBuffer_Replace(stripped, 0, 
+    CKYStatus status = CKYBuffer_Replace(stripped, 0,
 		CKYBuffer_Data(padded)+dataStart, size-dataStart);
     if (status != CKYSUCCESS) {
 	throw PKCS11Exception(CKR_HOST_MEMORY);
@@ -3253,7 +3253,7 @@ class RSASignatureParams : public CryptParams {
         // no need to unpad ciphertext
 	CKYBuffer_Replace(unpaddedOutput, 0, CKYBuffer_Data(paddedOutput),
 					CKYBuffer_Size(paddedOutput));
-	
+
     }
 };
 
@@ -3384,7 +3384,7 @@ Slot::getNonce()
 }
 
 void
-Slot::performRSAOp(CKYBuffer *output, const CKYBuffer *input, 
+Slot::performRSAOp(CKYBuffer *output, const CKYBuffer *input,
 					CKYByte keyNum, CKYByte direction)
 {
     //
@@ -3411,7 +3411,7 @@ retry:
     } else {
         status = CKYApplet_ComputeCrypt(conn, keyNum, CKY_RSA_NO_PAD, direction,
 		input, NULL, output, getNonce(), &result);
-    } 
+    }
 #ifdef notdef /* CAC pin cachine is incomplete, don't enable it */
     /* map the ISO not logged in code to the coolkey one */
     if (status == CKYISO_CONDITION_NOT_SATISFIED) {
@@ -3428,9 +3428,9 @@ retry:
 	// version0 keys could be logged out in the middle by someone else,
 	// reauthenticate... This code can go away when we depricate.
         // version0 applets.
-	if (!isVersion1Key && !loginAttempted  && 
+	if (!isVersion1Key && !loginAttempted  &&
 					(result == CKYISO_UNAUTHORIZED)) {
-	    // try to reauthenticate 
+	    // try to reauthenticate
 	    try {
 		oldAttemptLogin();
 	    } catch(PKCS11Exception& ) {
@@ -3478,7 +3478,7 @@ Slot::seedRandom(SessionHandleSuffix suffix, CK_BYTE_PTR pData,
 	if (status != CKYSUCCESS) break;
 
 	for (i=0; i < len ; i++) {
-	    CKYBuffer_SetChar(&random, i, 
+	    CKYBuffer_SetChar(&random, i,
 			CKYBuffer_GetChar(&random,i) ^
 			CKYBuffer_GetChar(&seed,i+offset));
 	}

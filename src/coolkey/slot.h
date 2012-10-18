@@ -116,11 +116,11 @@ struct ListObjectInfo {
             return false;
         if( obj.objectSize!=cmp.obj.objectSize )
             return false;
-        if( obj.readACL != cmp.obj.readACL ) 
+        if( obj.readACL != cmp.obj.readACL )
             return false;
-        if( obj.writeACL != cmp.obj.writeACL ) 
+        if( obj.writeACL != cmp.obj.writeACL )
             return false;
-        if( obj.deleteACL != cmp.obj.deleteACL ) 
+        if( obj.deleteACL != cmp.obj.deleteACL )
             return false;
         if( !CKYBuffer_IsEqual(&data,&cmp.data) )
             return false;
@@ -169,12 +169,12 @@ struct PinCache {
     bool valid;
 
     PinCache(const PinCache &cpy) {} // not allowed
-    PinCache  &operator=(const PinCache &cpy) 
+    PinCache  &operator=(const PinCache &cpy)
 			{ return *this ; }  // not allowed
 
   public:
     PinCache() : valid(false) { CKYBuffer_InitEmpty(&cachedPin); }
-    ~PinCache() { 
+    ~PinCache() {
 	CKYBuffer_Zero(&cachedPin); /* zero buffer before freeing it so
 				    * we don't get passwords on the heap */
 	CKYBuffer_FreeData(&cachedPin); }
@@ -212,10 +212,10 @@ class CryptOpState {
     CKYByte keyNum;
     CKYBuffer result;
 
-    CryptOpState() : state(NOT_INITIALIZED), keyNum(0) 
+    CryptOpState() : state(NOT_INITIALIZED), keyNum(0)
 				{ CKYBuffer_InitEmpty(&result); }
-    CryptOpState(const CryptOpState &cpy) : 
-				state(cpy.state), keyNum(cpy.keyNum) { 
+    CryptOpState(const CryptOpState &cpy) :
+				state(cpy.state), keyNum(cpy.keyNum) {
 	CKYBuffer_InitFromCopy(&result, &cpy.result);
     }
     CryptOpState &operator=(const CryptOpState &cpy) {
@@ -253,7 +253,7 @@ class Session {
 
     // the results of FindObjectsInit() are stored here and passed out
     // to FindObjects().
-    ObjectHandleList foundObjects;   
+    ObjectHandleList foundObjects;
     ObjectHandleIter curFoundObject;
 
     CryptOpState signatureState;
@@ -374,7 +374,7 @@ class Slot {
     // ascii blanks. size of the buffers is specifed by maxSize.
     //
     void makeLabelString(char *man, int maxSize, const unsigned char *cuid);
-    void makeManufacturerString(char *man, int maxSize, 
+    void makeManufacturerString(char *man, int maxSize,
 						const unsigned char *cuid);
     void makeModelString(char *man, int maxSize, const unsigned char *cuid);
     void makeSerialString(char *man, int maxSize, const unsigned char *cuid);
@@ -390,7 +390,7 @@ class Slot {
 
     void addKeyObject(list<PKCS11Object>& objectList,
         const ListObjectInfo& info, CK_OBJECT_HANDLE handle, bool isCombined);
-    void addCertObject(list<PKCS11Object>& objectList, 
+    void addCertObject(list<PKCS11Object>& objectList,
 	const ListObjectInfo& certAttrs,
 	const CKYBuffer *derCert, CK_OBJECT_HANDLE handle);
     void addObject(list<PKCS11Object>& objectList,
@@ -421,10 +421,10 @@ class Slot {
     void oldLogout(void);
     void CACLogout(void);
 
-    void readMuscleObject(CKYBuffer *obj, unsigned long objID, 
+    void readMuscleObject(CKYBuffer *obj, unsigned long objID,
 							unsigned int objSize);
 
-    void performSignature(CKYBuffer *sig, const CKYBuffer *unpaddedInput, 
+    void performSignature(CKYBuffer *sig, const CKYBuffer *unpaddedInput,
 							CKYByte keyNum);
     void performDecryption(CKYBuffer *data, const CKYBuffer *input, CKYByte keyNum);
 
@@ -432,7 +432,7 @@ class Slot {
         CK_ULONG ulInputLen, CK_BYTE_PTR pOutput,
         CK_ULONG_PTR pulOutputLen, CryptParams& params);
 
-    void performRSAOp(CKYBuffer *out, const CKYBuffer *input, CKYByte keyNum, 
+    void performRSAOp(CKYBuffer *out, const CKYBuffer *input, CKYByte keyNum,
 							     CKYByte direction);
 
     void processComputeCrypt(CKYBuffer *result, const CKYAPDU *apdu);
@@ -556,7 +556,7 @@ class SlotList {
 
     void validateSlotID(CK_SLOT_ID id) const;
 
-    void waitForSlotEvent(CK_FLAGS flags, CK_SLOT_ID_PTR pSlot, 
+    void waitForSlotEvent(CK_FLAGS flags, CK_SLOT_ID_PTR pSlot,
 	CK_VOID_PTR pReserved);
 
     void openSession(Session::Type type, CK_SLOT_ID slotID,
