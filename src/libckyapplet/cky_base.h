@@ -45,6 +45,15 @@ typedef unsigned char CKYBool;
     void *reserved4; \
     void *reserved5;
 
+#define CKYBUFFER_PRIVATE \
+    CKYSize len; \
+    CKYSize size; \
+    CKYByte *data; \
+    void   *reserved;
+
+#define CKYAPDU_PRIVATE \
+    CKYBuffer apduBuf; \
+    void *reserved;
 
 typedef struct _CKYBuffer {
 #ifdef CKYBUFFER_PRIVATE
