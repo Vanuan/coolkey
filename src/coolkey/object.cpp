@@ -1027,7 +1027,7 @@ CACCert::CACCert(CKYByte instance, const CKYBuffer *derCert) :
 
     /* So we know what the key is supposed to be used for based on
      * the instance */
-    if (instance == 2) {
+    if (instance >= 2) {
 	decrypt = TRUE;
     }
 
@@ -1041,7 +1041,12 @@ CACCert::CACCert(CKYByte instance, const CKYBuffer *derCert) :
     setAttribute(CKA_ID, &id);
     CKYBuffer_FreeData(&id);
     setAttributeULong(CKA_CERTIFICATE_TYPE, CKC_X_509);
-    setAttribute(CKA_LABEL, CAC_Label[instance]);
+    int keyIndex = instance;
+    /* ActivKey has up to 8 slots, read only the first cert from slots > 2 */
+    if(instance > 2) {
+        keyIndex = 0;
+    }
+    setAttribute(CKA_LABEL, CAC_Label[keyIndex]);
 
     CKYBuffer derSerial; CKYBuffer_InitEmpty(&derSerial);
     CKYBuffer derSubject; CKYBuffer_InitEmpty(&derSubject);

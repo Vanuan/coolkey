@@ -2306,9 +2306,11 @@ Slot::loadCACCert(CKYByte instance)
 						 instance, OSTimeNow() - time);
 
     if (instance == 0) {
-        readCACCertificateFirst(&rawCert, &nextSize, true);
+        /* do not fail if 0 instance is not found */
+        readCACCertificateFirst(&rawCert, &nextSize, false);
         if(CKYBuffer_Size(&rawCert) == 0) {
-             handleConnectionError();
+            shmem.clearValid(0);
+            return;
         }
 	log->log("CAC Cert %d: fetch CAC Cert:  %d ms\n", 
 						instance, OSTimeNow() - time);
@@ -2324,7 +2326,7 @@ Slot::loadCACCert(CKYByte instance)
 	CKYSize shmCertSize = CKYBuffer_Size(&shmCert);
 	const CKYByte *shmData = CKYBuffer_Data(&shmCert);
 
-	if (instance != 0) {
+	if ((instance > 0) && (instance <= 2)) {
 	    needRead = 0;
 	}
 
@@ -2351,11 +2353,11 @@ Slot::loadCACCert(CKYByte instance)
 	    shmem.setDataVersion(dataVersion);
 	} else {
 	    status = readCACCertificateFirst(&rawCert, &nextSize, false);
-	
+
 	    if (status != CKYSUCCESS) {
 		/* CAC only requires the Certificate in pki '0' */
 		/* if pki '1' or '2' are empty, treat it as a non-fatal error*/
-		if (instance == 2) {
+		if (instance == MAX_CERT_SLOTS - 1) {
 		    /* we've attempted to read all the certs, shared memory
 		     * is now valid */
 		    shmem.setValid();
@@ -2448,9 +2450,9 @@ Slot::loadObjects()
     std::list<ListObjectInfo>::iterator iter;
 
     if (state & CAC_CARD) {
-	loadCACCert(0);
-	loadCACCert(1);
-	loadCACCert(2);
+        for(int i = 0; i < MAX_CERT_SLOTS; ++i) {
+            loadCACCert(i);
+        }
 	status = trans.end();
 	loadReaderObject();
 	return;

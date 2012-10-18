@@ -294,7 +294,7 @@ class CryptParams {
 				 const CKYBuffer *paddedOutput) const = 0;
 };
 
-#define MAX_CERT_SLOTS 3
+#define MAX_CERT_SLOTS 8
 class Slot {
 
   public:
