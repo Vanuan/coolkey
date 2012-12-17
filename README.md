@@ -24,3 +24,11 @@ Installation
 ============
 
 This repo contains a branch that should fix the problem above. Select it and see its readme file.
+
+Upstreaming
+===========
+
+My solution is quite dirty. Someone more experienced should look into it and improve.
+
+Here's a related bug in RedHat's bugzilla:
+https://bugzilla.redhat.com/show_bug.cgi?id=826286
