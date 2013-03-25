@@ -25,6 +25,10 @@ Installation
 
 This repo contains a branch that should fix the problem above. Select it and see its readme file.
 
+You can also install it from a dedicated ppa repository: https://launchpad.net/~markus-tisoft/+archive/coolkey
+
+Notice that I'm not responsible for any damage caused by this software. Use it at your own risk.
+
 Upstreaming
 ===========
 
