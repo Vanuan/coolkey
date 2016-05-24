@@ -811,6 +811,10 @@ EOF
     arm*:Linux:*:*)
 	echo ${UNAME_MACHINE}-unknown-linux-gnu
 	exit 0 ;;
+    aarch64:Linux:*:*)
+        echo ${UNAME_MACHINE}-unknown-linux-gnu
+        exit 0 ;;
+    
     cris:Linux:*:*)
 	echo cris-axis-linux-gnu
 	exit 0 ;;
